@@ -3,6 +3,7 @@ from AvatarInputHandler import gun_marker_ctrl  # type: ignore
 from aih_constants import SHOT_RESULT as _SHOT_RESULT  # type: ignore
 from PlayerEvents import g_playerEvents  # type: ignore
 from AvatarInputHandler import AvatarInputHandler  # type: ignore
+from items.components.component_constants import MODERN_HE_PIERCING_POWER_REDUCTION_FACTOR_FOR_SHIELDS  # type: ignore
 
 from pade_gui import update_gui, hide_labels, GuiState
 
@@ -208,6 +209,150 @@ def my_shot_result_default(
     return result
 
 
+def my_shot_result_modern_he(
+    cls, gunMarker, collisionsDetails, fullPiercingPower, shell, minPP, maxPP, entity
+):
+    """Override for __shotResultModernHE in game code. Called when looking at an enemy tank with modern HE loaded."""
+    # pademinune armor mod variables
+    total_armor_val = 0.0
+    hit_body = False
+    hit_track = False
+
+    # Since we are outside the class, we must use the mangled names
+    isDestructible = cls._CrosshairShotResults__isDestructibleComponent
+    collectDebug = cls._CrosshairShotResults__collectDebugPiercingData
+    sendDebug = cls._CrosshairShotResults__sendDebugInfo
+
+    result = _SHOT_RESULT.NOT_PIERCED
+    ignoredMaterials = set()
+    piercingPower = fullPiercingPower
+    dispersion = round(piercingPower) * shell.piercingPowerRandomization
+    minPiercingPower = round(round(piercingPower) - dispersion)
+    maxPiercingPower = round(round(piercingPower) + dispersion)
+    explosionDamageAbsorption = 0
+    debugPiercingsList = []
+
+    try:
+        for cDetails in collisionsDetails:
+            if not isDestructible(entity, cDetails.compName):
+                sendDebug(
+                    gunMarker, debugPiercingsList, minPP, maxPP, fullPiercingPower
+                )
+                call_update_gui(
+                    fullPiercingPower, total_armor_val, False, hit_body, hit_track
+                )
+                return result
+
+            # Track detection
+            if not hit_track and (cDetails.compName == 0 or cDetails.compName >= 4):
+                hit_track = True
+
+            matInfo = cDetails.matInfo
+            if (
+                matInfo is not None
+                and (cDetails.compName, matInfo.kind) not in ignoredMaterials
+            ):
+                hitAngleCos = cDetails.hitAngleCos if matInfo.useHitAngle else 1.0
+                piercingPercent = 1000.0
+                penetrationArmor = 0
+
+                if fullPiercingPower > 0.0:
+                    penetrationArmor = cls._computePenetrationArmor(
+                        shell, hitAngleCos, matInfo
+                    )
+                    piercingPercent = (
+                        100.0
+                        + (penetrationArmor - piercingPower) / fullPiercingPower * 100.0
+                    )
+
+                if matInfo.vehicleDamageFactor:
+                    # main hull plate
+                    hit_body = True
+                    total_armor_val += penetrationArmor
+                    piercingPower -= penetrationArmor
+                    minPiercingPower = round(minPiercingPower - penetrationArmor)
+                    maxPiercingPower = round(maxPiercingPower - penetrationArmor)
+                    if piercingPercent <= minPP and explosionDamageAbsorption == 0:
+                        result = _SHOT_RESULT.GREAT_PIERCED
+                    else:
+                        result = _SHOT_RESULT.LITTLE_PIERCED
+                    collectDebug(
+                        debugPiercingsList,
+                        penetrationArmor,
+                        hitAngleCos,
+                        minPiercingPower,
+                        maxPiercingPower,
+                        piercingPercent,
+                        matInfo,
+                        result,
+                    )
+                    sendDebug(
+                        gunMarker, debugPiercingsList, minPP, maxPP, fullPiercingPower
+                    )
+                    call_update_gui(
+                        fullPiercingPower, total_armor_val, False, hit_body, hit_track
+                    )
+                    return result
+
+                if shell.type.shieldPenetration:
+                    shieldPenetration = (
+                        penetrationArmor
+                        * MODERN_HE_PIERCING_POWER_REDUCTION_FACTOR_FOR_SHIELDS
+                    )
+                    # accumulate 3x nominal armor as virtual armor cost
+                    total_armor_val += shieldPenetration
+                    piercingPower -= shieldPenetration
+                    minPiercingPower = round(minPiercingPower - shieldPenetration)
+                    maxPiercingPower = round(maxPiercingPower - shieldPenetration)
+                    # explosionDamageAbsorption += penetrationArmor * 0.0  # MODERN_HE_DAMAGE_ABSORPTION_FACTOR is 0.0
+
+                if (
+                    piercingPercent > maxPP
+                    or not shell.type.shieldPenetration
+                    or explosionDamageAbsorption >= shell.type.maxDamage
+                ):
+                    collectDebug(
+                        debugPiercingsList,
+                        penetrationArmor,
+                        hitAngleCos,
+                        minPiercingPower,
+                        maxPiercingPower,
+                        piercingPercent,
+                        matInfo,
+                        _SHOT_RESULT.NOT_PIERCED,
+                    )
+                    sendDebug(
+                        gunMarker, debugPiercingsList, minPP, maxPP, fullPiercingPower
+                    )
+                    call_update_gui(
+                        fullPiercingPower, total_armor_val, False, hit_body, hit_track
+                    )
+                    return _SHOT_RESULT.NOT_PIERCED
+
+                if matInfo.extra and piercingPercent <= maxPP:
+                    collectDebug(
+                        debugPiercingsList,
+                        penetrationArmor,
+                        hitAngleCos,
+                        minPiercingPower,
+                        maxPiercingPower,
+                        piercingPercent,
+                        matInfo,
+                        cls._CRIT_ONLY_SHOT_RESULT,
+                    )
+                    result = cls._CRIT_ONLY_SHOT_RESULT
+
+                if matInfo.collideOnceOnly:
+                    ignoredMaterials.add((cDetails.compName, matInfo.kind))
+
+    except Exception as e:
+        log("my_shot_result_modern_he error: %s" % str(e))
+
+    sendDebug(gunMarker, debugPiercingsList, minPP, maxPP, fullPiercingPower)
+    call_update_gui(fullPiercingPower, total_armor_val, False, hit_body, hit_track)
+    return result
+
+
 original_getShotResult = gun_marker_ctrl._CrosshairShotResults.getShotResult.__func__
 
 
@@ -256,6 +401,11 @@ gun_marker_ctrl._CrosshairShotResults.getShotResult = classmethod(my_get_shot_re
 # Called only when looking at an enemy tank with non HE shell
 gun_marker_ctrl._CrosshairShotResults._CrosshairShotResults__shotResultDefault = (
     classmethod(my_shot_result_default)
+)
+
+# Called only when looking at an enemy tank with modern HE shell
+gun_marker_ctrl._CrosshairShotResults._CrosshairShotResults__shotResultModernHE = (
+    classmethod(my_shot_result_modern_he)
 )
 
 # Called only once at the start of every match when loading in
