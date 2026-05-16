@@ -14,6 +14,12 @@ DEFAULT_CONFIG = {
         "font_size": 16,
         "label_format": "{prob}%",
     },
+    "angle_label": {
+        "x_offset": 0,
+        "y_offset": 70,
+        "font_size": 16,
+        "label_format": "{angle}°",
+    },
     "colors": {
         "green_chance": "B6FF00",
         "orange_chance": "FFAD00",
@@ -77,6 +83,12 @@ def save_flat_config(settings):
             "y_offset": settings["pen_label_y_offset"],
             "font_size": settings["pen_label_font_size"],
             "label_format": settings["pen_label_format"],
+        },
+        "angle_label": {
+            "x_offset": settings["angle_label_x_offset"],
+            "y_offset": settings["angle_label_y_offset"],
+            "font_size": settings["angle_label_font_size"],
+            "label_format": settings["angle_label_format"],
         },
         "colors": {
             "green_chance": settings["color_green"],

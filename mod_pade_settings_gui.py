@@ -3,7 +3,7 @@ import game  # type: ignore
 import Keys  # type: ignore
 from gui.modsSettingsApi import g_modsSettingsApi, templates  # type: ignore
 
-from pade_constants import ArmorLabel, PenLabel, Colors, Shadow
+from pade_constants import ArmorLabel, PenLabel, AngleLabel, Colors, Shadow
 from pade_config import save_flat_config
 from pade_gui import update_label_properties
 
@@ -89,6 +89,44 @@ template = {
             PenLabel.LABEL_FORMAT,
             tooltip="{HEADER}Pen Label Format{/HEADER}{BODY}The display format of the penetration label. '{prob}' will be replaced with the penetration probability.{/BODY}",
         ),
+        templates.createEmpty(10),
+        templates.createLabel("<b>— Angle Label —</b>"),
+        templates.createSlider(
+            "Angle Label Font Size",
+            "angle_label_font_size",
+            AngleLabel.FONT_SIZE,
+            5,
+            100,
+            1,
+            format="{{value}}px",
+            tooltip="{HEADER}Angle Label Font Size{/HEADER}{BODY}The size in pixels of the Angle Label.{/BODY}",
+        ),
+        templates.createNumericStepper(
+            "Angle Label Horizontal Offset",
+            "angle_label_x_offset",
+            AngleLabel.X_OFFSET,
+            -2000,
+            2000,
+            1,
+            manual=True,
+            tooltip="{HEADER}Angle Label Horizontal Offset{/HEADER}{BODY}The angle label's horizontal offset from the center of the screen. Positive values move it to the right.{/BODY}",
+        ),
+        templates.createNumericStepper(
+            "Angle Label Vertical Offset",
+            "angle_label_y_offset",
+            AngleLabel.Y_OFFSET,
+            -2000,
+            2000,
+            1,
+            manual=True,
+            tooltip="{HEADER}Angle Label Vertical Offset{/HEADER}{BODY}The angle label's vertical offset from the center of the screen. Positive values move it down.{/BODY}",
+        ),
+        templates.createInput(
+            "Angle Label Format",
+            "angle_label_format",
+            AngleLabel.LABEL_FORMAT,
+            tooltip="{HEADER}Angle Label Format{/HEADER}{BODY}The display format of the angle label. '{angle}' will be replaced with the impact angle in degrees.{/BODY}",
+        ),
     ],
     "column2": [
         templates.createLabel("<b>— Colors —</b>"),
@@ -168,6 +206,10 @@ def on_settings_save(linkage, new_settings):
         PenLabel.X_OFFSET = new_settings["pen_label_x_offset"]
         PenLabel.Y_OFFSET = new_settings["pen_label_y_offset"]
         PenLabel.LABEL_FORMAT = new_settings["pen_label_format"]
+        AngleLabel.FONT_SIZE = new_settings["angle_label_font_size"]
+        AngleLabel.X_OFFSET = new_settings["angle_label_x_offset"]
+        AngleLabel.Y_OFFSET = new_settings["angle_label_y_offset"]
+        AngleLabel.LABEL_FORMAT = new_settings["angle_label_format"]
         Colors.GREEN = new_settings["color_green"]
         Colors.ORANGE = new_settings["color_orange"]
         Colors.RED = new_settings["color_red"]

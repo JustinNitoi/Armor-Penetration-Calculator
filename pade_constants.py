@@ -38,6 +38,13 @@ class PenLabel:
     Y_OFFSET = safe_get_setting("pen_label", "y_offset")
 
 
+class AngleLabel:
+    LABEL_FORMAT = safe_get_setting("angle_label", "label_format")
+    FONT_SIZE = safe_get_setting("angle_label", "font_size")
+    X_OFFSET = safe_get_setting("angle_label", "x_offset")
+    Y_OFFSET = safe_get_setting("angle_label", "y_offset")
+
+
 class Shadow:
     COLOR = safe_get_setting("shadow", "shadow_color")
     ALPHA = safe_get_setting("shadow", "shadow_alpha")
