@@ -10,6 +10,9 @@ ANGLE_ALIAS = "pademinune_AngleLabel"
 class GuiState:
     is_visible = False
     track_visible = False
+    _last_armor_text = None  # type: str | None
+    _last_prob_text = None  # type: str | None
+    _last_angle_text = None  # type: str | None
 
 
 def log(message):
@@ -22,12 +25,14 @@ def update_armor_label(armor_value, color):
         font_size=ArmorLabel.FONT_SIZE, color=color, label_format=interior_label
     )
 
-    armor_changes = {"text": new_text, "visible": True}
+    if new_text == GuiState._last_armor_text and GuiState.is_visible:
+        return
 
+    GuiState._last_armor_text = new_text
     if not GuiState.is_visible:
         GuiState.is_visible = True
 
-    g_guiFlash.updateComponent(ARMOR_ALIAS, armor_changes)
+    g_guiFlash.updateComponent(ARMOR_ALIAS, {"text": new_text, "visible": True})
 
 
 def update_prob_label(prob, color):
@@ -36,12 +41,14 @@ def update_prob_label(prob, color):
         font_size=PenLabel.FONT_SIZE, color=color, label_format=interior_label
     )
 
-    prob_changes = {"text": new_text, "visible": True}
+    if new_text == GuiState._last_prob_text and GuiState.is_visible:
+        return
 
+    GuiState._last_prob_text = new_text
     if not GuiState.is_visible:
         GuiState.is_visible = True
 
-    g_guiFlash.updateComponent(PROB_ALIAS, prob_changes)
+    g_guiFlash.updateComponent(PROB_ALIAS, {"text": new_text, "visible": True})
 
 
 def update_angle_label(angle, color):
@@ -49,6 +56,11 @@ def update_angle_label(angle, color):
     new_text = "<font size='{font_size}' color='#{color}' face='$FieldFont'>{label_format}</font>".format(
         font_size=AngleLabel.FONT_SIZE, color=color, label_format=interior_label
     )
+
+    if new_text == GuiState._last_angle_text and GuiState.is_visible:
+        return
+
+    GuiState._last_angle_text = new_text
     g_guiFlash.updateComponent(ANGLE_ALIAS, {"text": new_text, "visible": True})
 
 
@@ -58,6 +70,9 @@ def hide_labels():
         g_guiFlash.updateComponent(PROB_ALIAS, {"visible": False})
         g_guiFlash.updateComponent(ANGLE_ALIAS, {"visible": False})
         GuiState.is_visible = False
+        GuiState._last_armor_text = None
+        GuiState._last_prob_text = None
+        GuiState._last_angle_text = None
 
 
 def update_gui(armor_value, prob, ricochet, hit_body, hit_track, hit_angle):
