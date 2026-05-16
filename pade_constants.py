@@ -2,23 +2,17 @@ from pade_config import user_settings, DEFAULT_CONFIG
 
 
 def safe_get_color(color):
-    default = DEFAULT_CONFIG["colors"][color]
-
-    setting = user_settings.get("colors", default)
-    if type(setting) == dict:
-        setting = user_settings.get(color, default)
-
-    return setting
+    default = DEFAULT_CONFIG.get("colors", "808080").get(color, "808080")
+    if "colors" not in user_settings or color not in user_settings["colors"]:
+        return default
+    return user_settings["colors"][color]
 
 
 def safe_get_setting(label, attribute):
     default = DEFAULT_CONFIG[label][attribute]
-
-    setting = user_settings.get(label, default)
-    if type(setting) == dict:
-        setting = setting.get(attribute, default)
-
-    return setting
+    if label not in user_settings or attribute not in user_settings[label]:
+        return default
+    return user_settings[label][attribute]
 
 
 class Colors:
@@ -42,6 +36,20 @@ class PenLabel:
     FONT_SIZE = safe_get_setting("pen_label", "font_size")
     X_OFFSET = safe_get_setting("pen_label", "x_offset")
     Y_OFFSET = safe_get_setting("pen_label", "y_offset")
+
+
+class AngleLabel:
+    LABEL_FORMAT = safe_get_setting("angle_label", "label_format")
+    FONT_SIZE = safe_get_setting("angle_label", "font_size")
+    X_OFFSET = safe_get_setting("angle_label", "x_offset")
+    Y_OFFSET = safe_get_setting("angle_label", "y_offset")
+
+
+class Shadow:
+    COLOR = safe_get_setting("shadow", "shadow_color")
+    ALPHA = safe_get_setting("shadow", "shadow_alpha")
+    LENGTH = safe_get_setting("shadow", "shadow_length")
+    STRENGTH = safe_get_setting("shadow", "shadow_strength")
 
 
 class TrackLabel:

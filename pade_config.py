@@ -14,11 +14,23 @@ DEFAULT_CONFIG = {
         "font_size": 16,
         "label_format": "{prob}%",
     },
+    "angle_label": {
+        "x_offset": 30,
+        "y_offset": 35,
+        "font_size": 16,
+        "label_format": "{angle}°",
+    },
     "colors": {
         "green_chance": "B6FF00",
         "orange_chance": "FFAD00",
         "red_chance": "FF2717",
         "ricochet": "800080",
+    },
+    "shadow": {
+        "shadow_color": "000000",
+        "shadow_alpha": 8,
+        "shadow_length": 3,
+        "shadow_strength": 7,
     },
 }
 
@@ -41,11 +53,66 @@ def read_config():
     return user_config
 
 
+def migrate_config(user_config):
+    changed = False
+    for section, defaults in DEFAULT_CONFIG.items():
+        if section not in user_config:
+            user_config[section] = defaults
+            changed = True
+        else:
+            for key, value in defaults.items():
+                if key not in user_config[section]:
+                    user_config[section][key] = value
+                    changed = True
+    if changed:
+        with open(CONFIG_PATH, "w") as f:
+            json.dump(user_config, f, indent=4)
+    return user_config
+
+
+def save_flat_config(settings):
+    config = {
+        "armor_label": {
+            "x_offset": settings["armor_label_x_offset"],
+            "y_offset": settings["armor_label_y_offset"],
+            "font_size": settings["armor_label_font_size"],
+            "label_format": settings["armor_label_format"],
+        },
+        "pen_label": {
+            "x_offset": settings["pen_label_x_offset"],
+            "y_offset": settings["pen_label_y_offset"],
+            "font_size": settings["pen_label_font_size"],
+            "label_format": settings["pen_label_format"],
+        },
+        "angle_label": {
+            "x_offset": settings["angle_label_x_offset"],
+            "y_offset": settings["angle_label_y_offset"],
+            "font_size": settings["angle_label_font_size"],
+            "label_format": settings["angle_label_format"],
+        },
+        "colors": {
+            "green_chance": settings["color_green"],
+            "orange_chance": settings["color_orange"],
+            "red_chance": settings["color_red"],
+            "ricochet": settings["color_ricochet"],
+        },
+        "shadow": {
+            "shadow_color": settings["shadow_color"],
+            "shadow_alpha": settings["shadow_alpha"],
+            "shadow_length": settings["shadow_length"],
+            "shadow_strength": settings["shadow_strength"],
+        },
+    }
+
+    with open(CONFIG_PATH, "w") as f:
+        json.dump(config, f, indent=4)
+
+
 if not os.path.isfile(CONFIG_PATH):
     create_config()
 
 try:
-    user_settings = read_config()
+    user_settings = migrate_config(read_config())
 except:
     # if the config is invalid, reset it
     create_config()

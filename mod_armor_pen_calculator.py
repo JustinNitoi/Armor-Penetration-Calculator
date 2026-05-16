@@ -39,13 +39,14 @@ def get_gaussian_probability(avg_pen, armor_val):
     return prob
 
 
-def call_update_gui(avg_pen, armor_val, ricochet, hit_body, hit_track):
+def call_update_gui(avg_pen, armor_val, ricochet, hit_body, hit_track, hit_angle_cos):
+    hit_angle = int(math.degrees(math.acos(hit_angle_cos)))
 
     prob = 0
     if not ricochet and hit_body:
         prob = get_gaussian_probability(avg_pen, armor_val)
 
-    update_gui(armor_val, prob, ricochet, hit_body, hit_track)
+    update_gui(armor_val, prob, ricochet, hit_body, hit_track, hit_angle)
 
 
 log("Mod is loading")
@@ -55,12 +56,16 @@ log("Mod is loading")
 def my_shot_result_default(
     cls, gunMarker, collisionsDetails, fullPiercingPower, shell, minPP, maxPP, entity
 ):
-    """Override for getShotResultDefault in game code. Is only called when looking at an enemy tank with non HE loaded."""
+    """
+    Override for getShotResultDefault in game code.
+    Is only called when looking at an enemy tank with non HE loaded.
+    """
     # pademinune armor mod variables
     total_armor_val = 0.0
     ricochet = False
     hit_body = False
     hit_track = False
+    min_hit_angle_cos = 1
 
     # Since we are outside the class, we must use the mangled names
     isDestructible = cls._CrosshairShotResults__isDestructibleComponent
@@ -121,6 +126,7 @@ def my_shot_result_default(
             if not isJet and cls._shouldRicochet(shell, hitAngleCos, matInfo):
                 # shell ricochet
                 ricochet = True
+                min_hit_angle_cos = hitAngleCos
                 collectDebug(
                     debugPiercingsList,
                     None,
@@ -153,6 +159,7 @@ def my_shot_result_default(
             if matInfo.vehicleDamageFactor:
                 # main armor plate
                 hit_body = True
+                min_hit_angle_cos = hitAngleCos
                 if minPP < piercingPercent < maxPP:
                     result = _SHOT_RESULT.LITTLE_PIERCED
                 elif piercingPercent <= minPP:
@@ -204,7 +211,14 @@ def my_shot_result_default(
     sendDebug(gunMarker, debugPiercingsList, minPP, maxPP, fullPiercingPower)
 
     # pademinune armor mod calc
-    call_update_gui(fullPiercingPower, total_armor_val, ricochet, hit_body, hit_track)
+    call_update_gui(
+        fullPiercingPower,
+        total_armor_val,
+        ricochet,
+        hit_body,
+        hit_track,
+        min_hit_angle_cos,
+    )
 
     return result
 
@@ -212,11 +226,15 @@ def my_shot_result_default(
 def my_shot_result_modern_he(
     cls, gunMarker, collisionsDetails, fullPiercingPower, shell, minPP, maxPP, entity
 ):
-    """Override for __shotResultModernHE in game code. Called when looking at an enemy tank with modern HE loaded."""
+    """
+    Override for __shotResultModernHE in game code.
+    Called when looking at an enemy tank with modern HE loaded.
+    """
     # pademinune armor mod variables
     total_armor_val = 0.0
     hit_body = False
     hit_track = False
+    min_hit_angle_cos = 1
 
     # Since we are outside the class, we must use the mangled names
     isDestructible = cls._CrosshairShotResults__isDestructibleComponent
@@ -239,7 +257,12 @@ def my_shot_result_modern_he(
                     gunMarker, debugPiercingsList, minPP, maxPP, fullPiercingPower
                 )
                 call_update_gui(
-                    fullPiercingPower, total_armor_val, False, hit_body, hit_track
+                    fullPiercingPower,
+                    total_armor_val,
+                    False,
+                    hit_body,
+                    hit_track,
+                    min_hit_angle_cos,
                 )
                 return result
 
@@ -268,6 +291,7 @@ def my_shot_result_modern_he(
                 if matInfo.vehicleDamageFactor:
                     # main hull plate
                     hit_body = True
+                    min_hit_angle_cos = hitAngleCos
                     total_armor_val += penetrationArmor
                     piercingPower -= penetrationArmor
                     minPiercingPower = round(minPiercingPower - penetrationArmor)
@@ -290,7 +314,12 @@ def my_shot_result_modern_he(
                         gunMarker, debugPiercingsList, minPP, maxPP, fullPiercingPower
                     )
                     call_update_gui(
-                        fullPiercingPower, total_armor_val, False, hit_body, hit_track
+                        fullPiercingPower,
+                        total_armor_val,
+                        False,
+                        hit_body,
+                        hit_track,
+                        min_hit_angle_cos,
                     )
                     return result
 
@@ -304,7 +333,8 @@ def my_shot_result_modern_he(
                     piercingPower -= shieldPenetration
                     minPiercingPower = round(minPiercingPower - shieldPenetration)
                     maxPiercingPower = round(maxPiercingPower - shieldPenetration)
-                    # explosionDamageAbsorption += penetrationArmor * 0.0  # MODERN_HE_DAMAGE_ABSORPTION_FACTOR is 0.0
+                    # explosionDamageAbsorption += penetrationArmor * 0.0
+                    # # MODERN_HE_DAMAGE_ABSORPTION_FACTOR is 0.0
 
                 if (
                     piercingPercent > maxPP
@@ -325,7 +355,12 @@ def my_shot_result_modern_he(
                         gunMarker, debugPiercingsList, minPP, maxPP, fullPiercingPower
                     )
                     call_update_gui(
-                        fullPiercingPower, total_armor_val, False, hit_body, hit_track
+                        fullPiercingPower,
+                        total_armor_val,
+                        False,
+                        hit_body,
+                        hit_track,
+                        min_hit_angle_cos,
                     )
                     return _SHOT_RESULT.NOT_PIERCED
 
@@ -349,7 +384,14 @@ def my_shot_result_modern_he(
         log("my_shot_result_modern_he error: %s" % str(e))
 
     sendDebug(gunMarker, debugPiercingsList, minPP, maxPP, fullPiercingPower)
-    call_update_gui(fullPiercingPower, total_armor_val, False, hit_body, hit_track)
+    call_update_gui(
+        fullPiercingPower,
+        total_armor_val,
+        False,
+        hit_body,
+        hit_track,
+        min_hit_angle_cos,
+    )
     return result
 
 
