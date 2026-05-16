@@ -123,7 +123,7 @@ def update_gui(armor_value, prob, ricochet, hit_body, hit_track, hit_angle):
         #     update_track_label(Colors.RED)
     elif not hit_body:
         # shell only hits spaced armor or tracks
-        # color = Colors.RED
+        color = Colors.RED
         # update_armor_label("-", color)
         # update_prob_label(0, color)
         # if hit_track and TrackLabel.ENABLED:
