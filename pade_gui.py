@@ -8,7 +8,9 @@ ANGLE_ALIAS = "pademinune_AngleLabel"
 
 
 class GuiState:
-    is_visible = False
+    armor_visible = False
+    prob_visible = False
+    angle_visible = False
     track_visible = False
     _last_armor_text = None  # type: str | None
     _last_prob_text = None  # type: str | None
@@ -25,13 +27,11 @@ def update_armor_label(armor_value, color):
         font_size=ArmorLabel.FONT_SIZE, color=color, label_format=interior_label
     )
 
-    if new_text == GuiState._last_armor_text and GuiState.is_visible:
+    if new_text == GuiState._last_armor_text and GuiState.armor_visible:
         return
 
     GuiState._last_armor_text = new_text
-    if not GuiState.is_visible:
-        GuiState.is_visible = True
-
+    GuiState.armor_visible = True
     g_guiFlash.updateComponent(ARMOR_ALIAS, {"text": new_text, "visible": True})
 
 
@@ -41,38 +41,59 @@ def update_prob_label(prob, color):
         font_size=PenLabel.FONT_SIZE, color=color, label_format=interior_label
     )
 
-    if new_text == GuiState._last_prob_text and GuiState.is_visible:
+    if new_text == GuiState._last_prob_text and GuiState.prob_visible:
         return
 
     GuiState._last_prob_text = new_text
-    if not GuiState.is_visible:
-        GuiState.is_visible = True
-
+    GuiState.prob_visible = True
     g_guiFlash.updateComponent(PROB_ALIAS, {"text": new_text, "visible": True})
 
 
 def update_angle_label(angle, color):
+    # only show if angle >= 60 deg
+    if angle < AngleLabel.DISPLAY_THRESHOLD and GuiState.angle_visible:
+        hide_angle_label()
+        return
+    elif angle < AngleLabel.DISPLAY_THRESHOLD and not GuiState.angle_visible:
+        # already not visible
+        return
+    
+
     interior_label = AngleLabel.LABEL_FORMAT.format(angle=angle)
     new_text = "<font size='{font_size}' color='#{color}' face='$FieldFont'>{label_format}</font>".format(
         font_size=AngleLabel.FONT_SIZE, color=color, label_format=interior_label
     )
 
-    if new_text == GuiState._last_angle_text and GuiState.is_visible:
+    if new_text == GuiState._last_angle_text and GuiState.angle_visible:
         return
 
     GuiState._last_angle_text = new_text
+    GuiState.angle_visible = True
     g_guiFlash.updateComponent(ANGLE_ALIAS, {"text": new_text, "visible": True})
 
 
+def hide_armor_label():
+    g_guiFlash.updateComponent(ARMOR_ALIAS, {"visible": False})
+    GuiState._last_armor_text = None
+    GuiState.armor_visible = False
+
+def hide_prob_label():
+    g_guiFlash.updateComponent(PROB_ALIAS, {"visible": False})
+    GuiState._last_prob_text = None
+    GuiState.prob_visible = False
+
+def hide_angle_label():
+    g_guiFlash.updateComponent(ANGLE_ALIAS, {"visible": False})
+    GuiState._last_angle_text = None
+    GuiState.angle_visible = False
+
 def hide_labels():
-    if GuiState.is_visible:
-        g_guiFlash.updateComponent(ARMOR_ALIAS, {"visible": False})
-        g_guiFlash.updateComponent(PROB_ALIAS, {"visible": False})
-        g_guiFlash.updateComponent(ANGLE_ALIAS, {"visible": False})
-        GuiState.is_visible = False
-        GuiState._last_armor_text = None
-        GuiState._last_prob_text = None
-        GuiState._last_angle_text = None
+    if GuiState.armor_visible:
+        hide_armor_label()
+    if GuiState.prob_visible:
+        hide_prob_label()
+    if GuiState.angle_visible:
+        hide_angle_label()
 
 
 def update_gui(armor_value, prob, ricochet, hit_body, hit_track, hit_angle):
@@ -158,7 +179,9 @@ angle_label_properties = {
 # create the armor value label
 g_guiFlash.createComponent(ARMOR_ALIAS, COMPONENT_TYPE.LABEL, armor_label_properties)
 # create the probability label
-g_guiFlash.createComponent(PROB_ALIAS, COMPONENT_TYPE.LABEL, probability_label_properties)
+g_guiFlash.createComponent(
+    PROB_ALIAS, COMPONENT_TYPE.LABEL, probability_label_properties
+)
 # create the angle label
 g_guiFlash.createComponent(ANGLE_ALIAS, COMPONENT_TYPE.LABEL, angle_label_properties)
 
@@ -166,22 +189,37 @@ g_guiFlash.createComponent(ANGLE_ALIAS, COMPONENT_TYPE.LABEL, angle_label_proper
 def update_label_properties():
     glowfilter = _build_glowfilter()
 
-    armor_props = {"x": ArmorLabel.X_OFFSET, "y": ArmorLabel.Y_OFFSET, "glowfilter": glowfilter}
+    armor_props = {
+        "x": ArmorLabel.X_OFFSET,
+        "y": ArmorLabel.Y_OFFSET,
+        "glowfilter": glowfilter,
+    }
     if not ArmorLabel.ENABLED:
         armor_props["visible"] = False
         GuiState._last_armor_text = None
+        GuiState.armor_visible = False
     g_guiFlash.updateComponent(ARMOR_ALIAS, armor_props)
 
-    pen_props = {"x": PenLabel.X_OFFSET, "y": PenLabel.Y_OFFSET, "glowfilter": glowfilter}
+    pen_props = {
+        "x": PenLabel.X_OFFSET,
+        "y": PenLabel.Y_OFFSET,
+        "glowfilter": glowfilter,
+    }
     if not PenLabel.ENABLED:
         pen_props["visible"] = False
         GuiState._last_prob_text = None
+        GuiState.prob_visible = False
     g_guiFlash.updateComponent(PROB_ALIAS, pen_props)
 
-    angle_props = {"x": AngleLabel.X_OFFSET, "y": AngleLabel.Y_OFFSET, "glowfilter": glowfilter}
+    angle_props = {
+        "x": AngleLabel.X_OFFSET,
+        "y": AngleLabel.Y_OFFSET,
+        "glowfilter": glowfilter,
+    }
     if not AngleLabel.ENABLED:
         angle_props["visible"] = False
         GuiState._last_angle_text = None
+        GuiState.angle_visible = False
     g_guiFlash.updateComponent(ANGLE_ALIAS, angle_props)
 
 

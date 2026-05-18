@@ -145,6 +145,16 @@ template = {
             AngleLabel.LABEL_FORMAT,
             tooltip="{HEADER}Angle Label Format{/HEADER}{BODY}The display format of the angle label. '{angle}' will be replaced with the impact angle in degrees.{/BODY}",
         ),
+        templates.createNumericStepper(
+            "Angle Display Threshold",
+            "angle_label_display_threshold",
+            AngleLabel.DISPLAY_THRESHOLD,
+            0,
+            90,
+            1,
+            manual=True,
+            tooltip="{HEADER}Angle Display Threshold{/HEADER}{BODY}The minimum impact angle (in degrees) at which the angle label is shown. Set to 0 to always show it.{/BODY}",
+        ),
     ],
     "column2": [
         templates.createLabel("<b>— Colors —</b>"),
@@ -231,6 +241,7 @@ def on_settings_save(linkage, new_settings):
         AngleLabel.X_OFFSET = new_settings["angle_label_x_offset"]
         AngleLabel.Y_OFFSET = new_settings["angle_label_y_offset"]
         AngleLabel.LABEL_FORMAT = new_settings["angle_label_format"]
+        AngleLabel.DISPLAY_THRESHOLD = new_settings["angle_label_display_threshold"]
         Colors.GREEN = new_settings["color_green"]
         Colors.ORANGE = new_settings["color_orange"]
         Colors.RED = new_settings["color_red"]

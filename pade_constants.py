@@ -46,6 +46,7 @@ class AngleLabel:
     FONT_SIZE = safe_get_setting("angle_label", "font_size")
     X_OFFSET = safe_get_setting("angle_label", "x_offset")
     Y_OFFSET = safe_get_setting("angle_label", "y_offset")
+    DISPLAY_THRESHOLD = safe_get_setting("angle_label", "display_threshold")
 
 
 class Shadow:

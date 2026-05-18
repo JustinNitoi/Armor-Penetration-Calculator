@@ -22,6 +22,7 @@ DEFAULT_CONFIG = {
         "y_offset": 35,
         "font_size": 16,
         "label_format": "{angle}°",
+        "display_threshold": 65,
     },
     "colors": {
         "green_chance": "B6FF00",
@@ -95,6 +96,7 @@ def save_flat_config(settings):
             "y_offset": settings["angle_label_y_offset"],
             "font_size": settings["angle_label_font_size"],
             "label_format": settings["angle_label_format"],
+            "display_threshold": settings["angle_label_display_threshold"],
         },
         "colors": {
             "green_chance": settings["color_green"],
