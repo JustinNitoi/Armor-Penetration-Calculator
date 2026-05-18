@@ -25,6 +25,7 @@ class Colors:
 
 
 class ArmorLabel:
+    ENABLED = safe_get_setting("armor_label", "enabled")
     LABEL_FORMAT = safe_get_setting("armor_label", "label_format")
     FONT_SIZE = safe_get_setting("armor_label", "font_size")
     X_OFFSET = safe_get_setting("armor_label", "x_offset")
@@ -32,6 +33,7 @@ class ArmorLabel:
 
 
 class PenLabel:
+    ENABLED = safe_get_setting("pen_label", "enabled")
     LABEL_FORMAT = safe_get_setting("pen_label", "label_format")
     FONT_SIZE = safe_get_setting("pen_label", "font_size")
     X_OFFSET = safe_get_setting("pen_label", "x_offset")
@@ -39,10 +41,12 @@ class PenLabel:
 
 
 class AngleLabel:
+    ENABLED = safe_get_setting("angle_label", "enabled")
     LABEL_FORMAT = safe_get_setting("angle_label", "label_format")
     FONT_SIZE = safe_get_setting("angle_label", "font_size")
     X_OFFSET = safe_get_setting("angle_label", "x_offset")
     Y_OFFSET = safe_get_setting("angle_label", "y_offset")
+    DISPLAY_THRESHOLD = safe_get_setting("angle_label", "display_threshold")
 
 
 class Shadow:
@@ -50,7 +54,3 @@ class Shadow:
     ALPHA = safe_get_setting("shadow", "shadow_alpha")
     LENGTH = safe_get_setting("shadow", "shadow_length")
     STRENGTH = safe_get_setting("shadow", "shadow_strength")
-
-
-class TrackLabel:
-    ENABLED = True

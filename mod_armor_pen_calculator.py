@@ -401,7 +401,7 @@ original_getShotResult = gun_marker_ctrl._CrosshairShotResults.getShotResult.__f
 def my_get_shot_result(cls, gunMarker, excludeTeam=0, piercingMultiplier=1):
     """Override for original getShotResult. Is only called when reticle is visible."""
     result = original_getShotResult(cls, gunMarker, excludeTeam, piercingMultiplier)
-    if result == _SHOT_RESULT.UNDEFINED and GuiState.is_visible:
+    if result == _SHOT_RESULT.UNDEFINED and (GuiState.armor_visible or GuiState.prob_visible or GuiState.angle_visible):
         # only call hide if the gui is still visible
         hide_labels()
     return result
@@ -409,16 +409,14 @@ def my_get_shot_result(cls, gunMarker, excludeTeam=0, piercingMultiplier=1):
 
 def on_load_match():
     """Called when the player spawns into a map."""
-    if GuiState.is_visible:
-        hide_labels()
+    hide_labels()
 
     # log("New match detected: Resetting GUI.")
 
 
 def on_leave_match():
     """Called when the player leaves a match"""
-    if GuiState.is_visible:
-        hide_labels()
+    hide_labels()
 
     # log('Player has left the match. Resetting GUI.')
 
@@ -430,9 +428,8 @@ def my_activate_postmortem(self, *args, **kwargs):
     """Called when your vehicle is destroyed"""
     original_activate_postmortem(self, *args, **kwargs)
 
-    if GuiState.is_visible:
-        hide_labels()
-        # log('Player is dead. Hiding GUI.')
+    hide_labels()
+    # log('Player is dead. Hiding GUI.')
 
 
 # overriding source code functions

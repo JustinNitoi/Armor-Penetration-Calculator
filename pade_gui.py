@@ -1,4 +1,5 @@
-from pade_constants import Colors, ArmorLabel, PenLabel, AngleLabel, Shadow, TrackLabel
+from pade_constants import Colors, ArmorLabel, PenLabel, AngleLabel, Shadow
+import pade_track
 from gambiter import g_guiFlash  # type: ignore
 from gambiter.flash import COMPONENT_TYPE, COMPONENT_ALIGN  # type: ignore
 
@@ -6,19 +7,14 @@ ARMOR_ALIAS = "pademinune_ArmorPenLabel"
 PROB_ALIAS = "pademinune_ProbabilityLabel"
 ANGLE_ALIAS = "pademinune_AngleLabel"
 
-TRACK_ALIAS = "pademinune_TrackLabel"
-GREEN_TRACK_ALIAS = "pademinune_GreenTrack"
-ORANGE_TRACK_ALIAS = "pademinune_OrangeTrack"
-RED_TRACK_ALIAS = "pademinune_RedTrack"
-
 
 class GuiState:
-    is_visible = False
-    track_visible = False
+    armor_visible = False
+    prob_visible = False
+    angle_visible = False
     _last_armor_text = None  # type: str | None
     _last_prob_text = None  # type: str | None
     _last_angle_text = None  # type: str | None
-    _last_track_color = None  # type: str | None
 
 
 def log(message):
@@ -31,13 +27,11 @@ def update_armor_label(armor_value, color):
         font_size=ArmorLabel.FONT_SIZE, color=color, label_format=interior_label
     )
 
-    if new_text == GuiState._last_armor_text and GuiState.is_visible:
+    if new_text == GuiState._last_armor_text and GuiState.armor_visible:
         return
 
     GuiState._last_armor_text = new_text
-    if not GuiState.is_visible:
-        GuiState.is_visible = True
-
+    GuiState.armor_visible = True
     g_guiFlash.updateComponent(ARMOR_ALIAS, {"text": new_text, "visible": True})
 
 
@@ -47,89 +41,61 @@ def update_prob_label(prob, color):
         font_size=PenLabel.FONT_SIZE, color=color, label_format=interior_label
     )
 
-    if new_text == GuiState._last_prob_text and GuiState.is_visible:
+    if new_text == GuiState._last_prob_text and GuiState.prob_visible:
         return
 
     GuiState._last_prob_text = new_text
-    if not GuiState.is_visible:
-        GuiState.is_visible = True
-
+    GuiState.prob_visible = True
     g_guiFlash.updateComponent(PROB_ALIAS, {"text": new_text, "visible": True})
 
 
-def update_track_label(color):
-    if color == GuiState._last_track_color and GuiState.track_visible:
-        return
-
-    GuiState._last_track_color = color
-    make_visible = {"visible": True}
-    make_invisible = {"visible": False}
-    if color == Colors.GREEN:
-        g_guiFlash.updateComponent(GREEN_TRACK_ALIAS, make_visible)
-        g_guiFlash.updateComponent(ORANGE_TRACK_ALIAS, make_invisible)
-        g_guiFlash.updateComponent(RED_TRACK_ALIAS, make_invisible)
-    elif color == Colors.ORANGE:
-        g_guiFlash.updateComponent(GREEN_TRACK_ALIAS, make_invisible)
-        g_guiFlash.updateComponent(ORANGE_TRACK_ALIAS, make_visible)
-        g_guiFlash.updateComponent(RED_TRACK_ALIAS, make_invisible)
-    elif color == Colors.RED:
-        g_guiFlash.updateComponent(GREEN_TRACK_ALIAS, make_invisible)
-        g_guiFlash.updateComponent(ORANGE_TRACK_ALIAS, make_invisible)
-        g_guiFlash.updateComponent(RED_TRACK_ALIAS, make_visible)
-
-    if not GuiState.track_visible:
-        GuiState.track_visible = True
-
-
-def show_green_track_label():
-    if not GuiState.track_visible:
-        make_visible = {"visible": True}
-        g_guiFlash.updateComponent(GREEN_TRACK_ALIAS, make_visible)
-        GuiState.track_visible = True
-
-
-def hide_green_track_label():
-    if GuiState.track_visible:
-        make_invisible = {"visible": False}
-        g_guiFlash.updateComponent(GREEN_TRACK_ALIAS, make_invisible)
-        GuiState.track_visible = False
-
-
-def hide_track_label():
-    if GuiState.track_visible:
-        track_changes = {"visible": False}
-        g_guiFlash.updateComponent(GREEN_TRACK_ALIAS, track_changes)
-        g_guiFlash.updateComponent(ORANGE_TRACK_ALIAS, track_changes)
-        g_guiFlash.updateComponent(RED_TRACK_ALIAS, track_changes)
-        GuiState.track_visible = False
-        GuiState._last_track_color = None
-
-
 def update_angle_label(angle, color):
+    # only show if angle >= 60 deg
+    if angle < AngleLabel.DISPLAY_THRESHOLD and GuiState.angle_visible:
+        hide_angle_label()
+        return
+    elif angle < AngleLabel.DISPLAY_THRESHOLD and not GuiState.angle_visible:
+        # already not visible
+        return
+    
+
     interior_label = AngleLabel.LABEL_FORMAT.format(angle=angle)
     new_text = "<font size='{font_size}' color='#{color}' face='$FieldFont'>{label_format}</font>".format(
         font_size=AngleLabel.FONT_SIZE, color=color, label_format=interior_label
     )
 
-    if new_text == GuiState._last_angle_text and GuiState.is_visible:
+    if new_text == GuiState._last_angle_text and GuiState.angle_visible:
         return
 
     GuiState._last_angle_text = new_text
+    GuiState.angle_visible = True
     g_guiFlash.updateComponent(ANGLE_ALIAS, {"text": new_text, "visible": True})
 
 
-def hide_labels():
-    if GuiState.is_visible:
-        g_guiFlash.updateComponent(ARMOR_ALIAS, {"visible": False})
-        g_guiFlash.updateComponent(PROB_ALIAS, {"visible": False})
-        g_guiFlash.updateComponent(ANGLE_ALIAS, {"visible": False})
-        GuiState.is_visible = False
-        GuiState._last_armor_text = None
-        GuiState._last_prob_text = None
-        GuiState._last_angle_text = None
+def hide_armor_label():
+    g_guiFlash.updateComponent(ARMOR_ALIAS, {"visible": False})
+    GuiState._last_armor_text = None
+    GuiState.armor_visible = False
 
-    if GuiState.track_visible:
-        hide_track_label()
+def hide_prob_label():
+    g_guiFlash.updateComponent(PROB_ALIAS, {"visible": False})
+    GuiState._last_prob_text = None
+    GuiState.prob_visible = False
+
+def hide_angle_label():
+    g_guiFlash.updateComponent(ANGLE_ALIAS, {"visible": False})
+    GuiState._last_angle_text = None
+    GuiState.angle_visible = False
+
+def hide_labels():
+    if GuiState.armor_visible:
+        hide_armor_label()
+    if GuiState.prob_visible:
+        hide_prob_label()
+    if GuiState.angle_visible:
+        hide_angle_label()
+    if pade_track.TrackState.track_visible:
+        pade_track.hide_track_label()
 
 
 def update_gui(armor_value, prob, ricochet, hit_body, hit_track, hit_angle):
@@ -137,18 +103,15 @@ def update_gui(armor_value, prob, ricochet, hit_body, hit_track, hit_angle):
     if ricochet:
         # shell ricochet
         color = Colors.PURPLE
-        update_armor_label("-", color)
-        update_prob_label(0, color)
-        update_angle_label(hit_angle, color)
-        # if hit_track and TrackLabel.ENABLED:
-        #     update_track_label(Colors.RED)
+        if ArmorLabel.ENABLED:
+            update_armor_label("-", color)
+        if PenLabel.ENABLED:
+            update_prob_label(0, color)
+        if AngleLabel.ENABLED:
+            update_angle_label(hit_angle, color)
     elif not hit_body:
         # shell only hits spaced armor or tracks
         color = Colors.RED
-        # update_armor_label("-", color)
-        # update_prob_label(0, color)
-        # if hit_track and TrackLabel.ENABLED:
-        #     update_track_label(Colors.RED)
         hide_labels()
     else:
         color = Colors.GREY
@@ -161,18 +124,21 @@ def update_gui(armor_value, prob, ricochet, hit_body, hit_track, hit_angle):
         else:
             color = Colors.ORANGE
 
-        update_armor_label(int(armor_value), color)
-        update_prob_label(int(prob), color)
-        update_angle_label(hit_angle, color)
-
+        if ArmorLabel.ENABLED:
+            update_armor_label(int(armor_value), color)
+        if PenLabel.ENABLED:
+            update_prob_label(int(prob), color)
+        if AngleLabel.ENABLED:
+            update_angle_label(hit_angle, color)
+    
     if (
         hit_track
-        and TrackLabel.ENABLED
         and (color == Colors.GREEN or color == Colors.ORANGE)
     ):
-        update_track_label(color)
-    else:
-        hide_track_label()
+        pade_track.update_track_label(color)
+    elif pade_track.TrackState.track_visible:
+        pade_track.hide_track_label()
+
 
 
 log("Starting creation of armor and penetration gui components")
@@ -222,36 +188,6 @@ angle_label_properties = {
     "visible": False,
 }
 
-green_track_properties = {
-    "image": "img://gui/pademinune/crosshair-16-green.png",
-    "alpha": 1,
-    "x": 0,
-    "y": 0,
-    "alignX": COMPONENT_ALIGN.CENTER,
-    "alignY": COMPONENT_ALIGN.CENTER,
-    "visible": False,
-}
-
-orange_track_properties = {
-    "image": "img://gui/pademinune/crosshair-16-orange.png",
-    "alpha": 1,
-    "x": 0,
-    "y": 0,
-    "alignX": COMPONENT_ALIGN.CENTER,
-    "alignY": COMPONENT_ALIGN.CENTER,
-    "visible": False,
-}
-
-red_track_properties = {
-    "image": "img://gui/pademinune/crosshair-16-red.png",
-    "alpha": 1,
-    "x": 0,
-    "y": 0,
-    "alignX": COMPONENT_ALIGN.CENTER,
-    "alignY": COMPONENT_ALIGN.CENTER,
-    "visible": False,
-}
-
 # create the armor value label
 g_guiFlash.createComponent(ARMOR_ALIAS, COMPONENT_TYPE.LABEL, armor_label_properties)
 # create the probability label
@@ -261,13 +197,42 @@ g_guiFlash.createComponent(
 # create the angle label
 g_guiFlash.createComponent(ANGLE_ALIAS, COMPONENT_TYPE.LABEL, angle_label_properties)
 
-# create the track labels
-g_guiFlash.createComponent(
-    GREEN_TRACK_ALIAS, COMPONENT_TYPE.IMAGE, green_track_properties
-)
-g_guiFlash.createComponent(
-    ORANGE_TRACK_ALIAS, COMPONENT_TYPE.IMAGE, orange_track_properties
-)
-g_guiFlash.createComponent(RED_TRACK_ALIAS, COMPONENT_TYPE.IMAGE, red_track_properties)
+
+def update_label_properties():
+    glowfilter = _build_glowfilter()
+
+    armor_props = {
+        "x": ArmorLabel.X_OFFSET,
+        "y": ArmorLabel.Y_OFFSET,
+        "glowfilter": glowfilter,
+    }
+    if not ArmorLabel.ENABLED:
+        armor_props["visible"] = False
+        GuiState._last_armor_text = None
+        GuiState.armor_visible = False
+    g_guiFlash.updateComponent(ARMOR_ALIAS, armor_props)
+
+    pen_props = {
+        "x": PenLabel.X_OFFSET,
+        "y": PenLabel.Y_OFFSET,
+        "glowfilter": glowfilter,
+    }
+    if not PenLabel.ENABLED:
+        pen_props["visible"] = False
+        GuiState._last_prob_text = None
+        GuiState.prob_visible = False
+    g_guiFlash.updateComponent(PROB_ALIAS, pen_props)
+
+    angle_props = {
+        "x": AngleLabel.X_OFFSET,
+        "y": AngleLabel.Y_OFFSET,
+        "glowfilter": glowfilter,
+    }
+    if not AngleLabel.ENABLED:
+        angle_props["visible"] = False
+        GuiState._last_angle_text = None
+        GuiState.angle_visible = False
+    g_guiFlash.updateComponent(ANGLE_ALIAS, angle_props)
+
 
 log("GUI components have been created!")
