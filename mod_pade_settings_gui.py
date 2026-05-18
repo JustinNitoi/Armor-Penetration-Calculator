@@ -15,6 +15,12 @@ template = {
     "enabled": True,
     "column1": [
         templates.createLabel("<b>— Armor Label —</b>"),
+        templates.createCheckbox(
+            "Enable Armor Label",
+            "armor_label_enabled",
+            ArmorLabel.ENABLED,
+            tooltip="{HEADER}Enable Armor Label{/HEADER}{BODY}Show or hide the effective armor value label.{/BODY}",
+        ),
         templates.createSlider(
             "Armor Label Font Size",
             "armor_label_font_size",
@@ -53,6 +59,12 @@ template = {
         ),
         templates.createEmpty(10),
         templates.createLabel("<b>— Probability Label —</b>"),
+        templates.createCheckbox(
+            "Enable Probability Label",
+            "pen_label_enabled",
+            PenLabel.ENABLED,
+            tooltip="{HEADER}Enable Probability Label{/HEADER}{BODY}Show or hide the penetration probability label.{/BODY}",
+        ),
         templates.createSlider(
             "Pen Label Font Size",
             "pen_label_font_size",
@@ -91,6 +103,12 @@ template = {
         ),
         templates.createEmpty(10),
         templates.createLabel("<b>— Angle Label —</b>"),
+        templates.createCheckbox(
+            "Enable Angle Label",
+            "angle_label_enabled",
+            AngleLabel.ENABLED,
+            tooltip="{HEADER}Enable Angle Label{/HEADER}{BODY}Show or hide the impact angle label.{/BODY}",
+        ),
         templates.createSlider(
             "Angle Label Font Size",
             "angle_label_font_size",
@@ -198,14 +216,17 @@ template = {
 
 def on_settings_save(linkage, new_settings):
     if linkage == mod_linkage:
+        ArmorLabel.ENABLED = new_settings["armor_label_enabled"]
         ArmorLabel.FONT_SIZE = new_settings["armor_label_font_size"]
         ArmorLabel.X_OFFSET = new_settings["armor_label_x_offset"]
         ArmorLabel.Y_OFFSET = new_settings["armor_label_y_offset"]
         ArmorLabel.LABEL_FORMAT = new_settings["armor_label_format"]
+        PenLabel.ENABLED = new_settings["pen_label_enabled"]
         PenLabel.FONT_SIZE = new_settings["pen_label_font_size"]
         PenLabel.X_OFFSET = new_settings["pen_label_x_offset"]
         PenLabel.Y_OFFSET = new_settings["pen_label_y_offset"]
         PenLabel.LABEL_FORMAT = new_settings["pen_label_format"]
+        AngleLabel.ENABLED = new_settings["angle_label_enabled"]
         AngleLabel.FONT_SIZE = new_settings["angle_label_font_size"]
         AngleLabel.X_OFFSET = new_settings["angle_label_x_offset"]
         AngleLabel.Y_OFFSET = new_settings["angle_label_y_offset"]

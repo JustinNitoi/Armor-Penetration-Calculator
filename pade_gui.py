@@ -80,15 +80,14 @@ def update_gui(armor_value, prob, ricochet, hit_body, hit_track, hit_angle):
     if ricochet:
         # shell ricochet
         color = Colors.PURPLE
-        update_armor_label("-", color)
-        update_prob_label(0, color)
-        update_angle_label(hit_angle, color)
+        if ArmorLabel.ENABLED:
+            update_armor_label("-", color)
+        if PenLabel.ENABLED:
+            update_prob_label(0, color)
+        if AngleLabel.ENABLED:
+            update_angle_label(hit_angle, color)
     elif not hit_body:
         # shell only hits spaced armor or tracks
-        # color = Colors.RED
-        # update_armor_label("-", color)
-        # update_prob_label(0, color)
-        # g_guiFlash.updateComponent(ANGLE_ALIAS, {"visible": False})
         hide_labels()
     else:
         color = Colors.GREY
@@ -101,9 +100,12 @@ def update_gui(armor_value, prob, ricochet, hit_body, hit_track, hit_angle):
         else:
             color = Colors.ORANGE
 
-        update_armor_label(int(armor_value), color)
-        update_prob_label(int(prob), color)
-        update_angle_label(hit_angle, color)
+        if ArmorLabel.ENABLED:
+            update_armor_label(int(armor_value), color)
+        if PenLabel.ENABLED:
+            update_prob_label(int(prob), color)
+        if AngleLabel.ENABLED:
+            update_angle_label(hit_angle, color)
 
 
 log("Starting creation of armor and penetration gui components")
@@ -163,30 +165,24 @@ g_guiFlash.createComponent(ANGLE_ALIAS, COMPONENT_TYPE.LABEL, angle_label_proper
 
 def update_label_properties():
     glowfilter = _build_glowfilter()
-    g_guiFlash.updateComponent(
-        ARMOR_ALIAS,
-        {
-            "x": ArmorLabel.X_OFFSET,
-            "y": ArmorLabel.Y_OFFSET,
-            "glowfilter": glowfilter,
-        },
-    )
-    g_guiFlash.updateComponent(
-        PROB_ALIAS,
-        {
-            "x": PenLabel.X_OFFSET,
-            "y": PenLabel.Y_OFFSET,
-            "glowfilter": glowfilter,
-        },
-    )
-    g_guiFlash.updateComponent(
-        ANGLE_ALIAS,
-        {
-            "x": AngleLabel.X_OFFSET,
-            "y": AngleLabel.Y_OFFSET,
-            "glowfilter": glowfilter,
-        },
-    )
+
+    armor_props = {"x": ArmorLabel.X_OFFSET, "y": ArmorLabel.Y_OFFSET, "glowfilter": glowfilter}
+    if not ArmorLabel.ENABLED:
+        armor_props["visible"] = False
+        GuiState._last_armor_text = None
+    g_guiFlash.updateComponent(ARMOR_ALIAS, armor_props)
+
+    pen_props = {"x": PenLabel.X_OFFSET, "y": PenLabel.Y_OFFSET, "glowfilter": glowfilter}
+    if not PenLabel.ENABLED:
+        pen_props["visible"] = False
+        GuiState._last_prob_text = None
+    g_guiFlash.updateComponent(PROB_ALIAS, pen_props)
+
+    angle_props = {"x": AngleLabel.X_OFFSET, "y": AngleLabel.Y_OFFSET, "glowfilter": glowfilter}
+    if not AngleLabel.ENABLED:
+        angle_props["visible"] = False
+        GuiState._last_angle_text = None
+    g_guiFlash.updateComponent(ANGLE_ALIAS, angle_props)
 
 
 log("GUI components have been created!")
