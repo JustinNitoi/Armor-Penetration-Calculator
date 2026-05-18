@@ -139,15 +139,12 @@ def my_shot_result_default(
                 )
                 break
 
-            penetrationArmor = 0
+            penetrationArmor = cls._computePenetrationArmor(
+                shell, hitAngleCos, matInfo
+            )
+            total_armor_val += penetrationArmor
+
             if piercingPower > 0.0:
-                penetrationArmor = cls._computePenetrationArmor(
-                    shell, hitAngleCos, matInfo
-                )
-
-                # add to total armor counter
-                total_armor_val += penetrationArmor
-
                 piercingPercent = (
                     100.0
                     + (penetrationArmor - piercingPower) / fullPiercingPower * 100.0
@@ -199,8 +196,9 @@ def my_shot_result_default(
             if matInfo.collideOnceOnly:
                 ignoredMaterials.add((cDetails.compName, matInfo.kind))
 
-        if piercingPower <= 0.0:
-            break
+        # don't break early so that it can compute all the armor
+        # if piercingPower <= 0.0:
+        #     break
 
         if cls._SHELL_EXTRA_DATA[shell.kind].jetLossPPByDist > 0.0:
             isJet = True
